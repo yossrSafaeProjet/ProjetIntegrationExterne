@@ -12,4 +12,13 @@ db.run(`CREATE TABLE IF NOT EXISTS utilisateurs (
     email TEXT,
     password TEXT
 )`);
+
+db.run(`CREATE TABLE IF NOT EXISTS jwt_tokens (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER,
+  token TEXT,
+  expires_at DATETIME,
+  is_revoked BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (user_id) REFERENCES utilisateurs(id)
+)`);
 db.close();
