@@ -13,6 +13,7 @@ const db = new SQLite3.Database(dbPath);
 passport.use(new LocalStrategy(
     { usernameField: 'email' },
     (email, password, done) => {
+        
         const db = new SQLite3.Database(dbPath);
         db.get('SELECT * FROM utilisateurs WHERE email = ?', [email], (err, row) => {
             if (err) {
@@ -26,12 +27,11 @@ passport.use(new LocalStrategy(
                 if (bcryptErr) {
                     return done(bcryptErr);
                 }
-               
+                
                 if (!result) {
                     console.log('Mot de passe incorrect');
                     return done(null, false, { message: 'Mot de passe incorrect.' });
                 }
-
                 return done(null, row);
             });
         });
@@ -54,6 +54,7 @@ router.post('/login', (req, res, next) => {
         if (err) {
             return next(err);
         }
+
         if (!user) {
             return res.render('conexion', { message: 'Nom d\'utilisateur ou mot de passe incorrect.' });
         }
