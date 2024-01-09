@@ -5,8 +5,13 @@ const SQLite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const path = require('path');
 const LocalStrategy = require('passport-local').Strategy;
+const passportJWT = require('passport-jwt');
+const JwtStrategy = passportJWT.Strategy;
+const ExtractJwt = passportJWT.ExtractJwt;
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 const dbPath = path.join(__dirname, 'ma_base_de_donnees.db');
+const secretKey = 'aqzsedrftg';
 
 const db = new SQLite3.Database(dbPath);
 // Configurations Passport
@@ -48,9 +53,31 @@ passport.deserializeUser((id, done) => {
         done(err, row);
     });
 });
-
-router.post('/login', (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
+// Configuration du JWT
+const jwtOptions = {
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: secretKey,
+    expiresIn: '1h' // Durée de validité du jeton ( 1 heure)
+  };
+  passport.use(new JwtStrategy(jwtOptions, (jwtPayload, done) => {
+    // Récupération de l'ID de l'utilisateur à partir du JWT
+    const userId = jwtPayload.userId;
+  
+    // Requête à la base de données pour charger les informations de l'utilisateur
+    // Utilisez l'ID récupéré pour obtenir les détails de l'utilisateur depuis la base de données
+    db.get('SELECT * FROM utilisateurs WHERE id = ?', [userId], (err, user) => {
+      if (err) {
+        return done(err, false);
+      }
+      if (user) {
+        return done(null, user);
+      } else {
+        return done(null, false);
+      }
+    });
+  }));
+  router.post('/login', async (req, res, next) => {
+    passport.authenticate('local', async (err, user, info) => {
         if (err) {
             return next(err);
         }
@@ -62,8 +89,29 @@ router.post('/login', (req, res, next) => {
                 return next(loginErr);
             }
             
-            // Handle successful login here (if needed)
-            return res.redirect('/espace');
+            try {
+                const token = jwt.sign({
+                    userId: user.id
+                }, secretKey);
+    
+                const expirationTime = new Date(Date.now() + 3600000);
+    
+                // Insérer le JWT dans la base de données
+                db.run('INSERT INTO jwt_tokens (user_id, token, expires_at, is_revoked) VALUES (?, ?, ?, 0)', [user.id, token, expirationTime], (insertErr) => {
+                    if (insertErr) {
+                        console.error('Erreur lors de l\'enregistrement du JWT :', insertErr);
+                        return res.status(500).send('Erreur lors de la connexion');
+                    } else {
+                        console.log('JWT enregistré avec succès');
+                        console.log(token);
+                        res.set('Authorization', `Bearer ${token}`);
+                        return res.redirect('/espace');
+                    }
+                });
+            } catch (error) {
+                console.error('Erreur lors de la génération et de l\'enregistrement du JWT :', error);
+                return res.status(500).send('Erreur lors de la connexion');
+            }
         });
     })(req, res, next);
 });
