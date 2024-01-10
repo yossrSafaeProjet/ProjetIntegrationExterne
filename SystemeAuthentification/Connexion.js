@@ -114,7 +114,6 @@ const jwtOptions = {
                         console.log(token);
                         res.set('Authorization', `Bearer ${token}`);
                         res.send(JSON.stringify({'status':'200','message':'succés'}));
-                        /* return res.redirect('/espace'); */
                     }
                 });
             } catch (error) {
