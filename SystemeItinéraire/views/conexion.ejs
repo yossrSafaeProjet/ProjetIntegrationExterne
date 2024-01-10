@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Application avec Authentification</title>
-    <link rel="stylesheet" href="/Connexion.css">
+    <link rel="stylesheet" href="/css/Connexion.css">
 </head>
 <body>
     <header>
@@ -13,7 +13,7 @@
     </header>
 
     <main>
-        <form action="/login" method="post">
+        <form action="/fetchData" method="post">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
 
@@ -24,7 +24,6 @@
             
         </form>
         <p>Vous n'avez pas de compte? <a href="/inscription" >S'inscrire</a></p>
-        <p style="color: red;"> <%= message %> </p>
     </main>
 </body>
 </html>
