@@ -13,7 +13,7 @@ const { error } = require('console');
 const router = express.Router();
 const dbPath = path.join(__dirname, 'ma_base_de_donnees.db');
 const secretKey = 'aqzsedrftg';
-
+router.use(express.json());
 const db = new SQLite3.Database(dbPath);
 // Configurations Passport
 passport.use(new LocalStrategy(
@@ -86,11 +86,12 @@ const jwtOptions = {
             return next(err);
         }
        
-        if (!user) {
-            /* return res.render('conexion', { message: 'Nom d\'utilisateur ou mot de passe incorrect.' }); */
-           
+        if (!user) {  
             res.status(401).json({ status: 'error', message: 'Identifiants incorrects.' });
+            return;
         }
+        res.status(200).json({ status: 'succès', message: 'ok pour les identifiants' });
+
         req.logIn(user, async (loginErr) => {
             if (loginErr) {
                 return next(loginErr);

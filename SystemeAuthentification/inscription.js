@@ -36,7 +36,7 @@ router.post('/', (req, res) => {
         console.error(err.message);
         res.status(500).send('Erreur lors de l\'enregistrement de l\'utilisateur.');
       } else {
-        res.redirect('/connexion');
+        res.status(200).json({'status':'succés','message':'ok pour enregistrement'})
       }
     });
   });

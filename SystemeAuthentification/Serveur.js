@@ -43,8 +43,8 @@ app.use('/auth', loginRouter);
   res.render('inscription');
 }); */
 
-/* const registrationRouter = require('./inscription');
-app.use('/enregistrerUtilisateur', registrationRouter); */
+const registrationRouter = require('./inscription');
+app.use('/enregistrerUtilisateur', registrationRouter);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
