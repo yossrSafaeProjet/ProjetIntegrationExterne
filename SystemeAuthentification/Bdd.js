@@ -21,4 +21,6 @@ db.run(`CREATE TABLE IF NOT EXISTS jwt_tokens (
   is_revoked BOOLEAN DEFAULT FALSE,
   FOREIGN KEY (user_id) REFERENCES utilisateurs(id)
 )`);
+
+
 db.close();

@@ -3,9 +3,13 @@ const passport = require('passport');
 const session = require('express-session');
 const loginRouter = require('./Connexion');
 const app = express();
-const path = require('path');
+app.set('view engine', 'ejs');
+const jwt = require('jsonwebtoken');
+const secretKey = 'aqzsedrftg';
 
-app.use(session({ secret: 'votre-secret', resave: true, saveUninitialized: true }));
+app.use(session({ secret: 'cle_session', resave: true, saveUninitialized: true }));
+
+// Initialisez passport après la configuration de la session
 app.use(passport.initialize());
 app.use(passport.session());
 const bodyParser = require('body-parser');
@@ -45,6 +49,83 @@ app.use('/auth', loginRouter);
 
 const registrationRouter = require('./inscription');
 app.use('/enregistrerUtilisateur', registrationRouter);
+
+app.get('/stations', (req, res) => {
+  fetch('https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?limit=5')
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.results && Array.isArray(data.results)) {
+        const stations = data.results.map(record => {
+          return {
+            name: record.name,
+            isInstalled: record.is_installed,
+            bikesAvailable: record.numbikesavailable,
+            capacity: record.capacity
+          };
+        });
+        res.render('stations', { stations }); // Rend la page stations.ejs avec les données stations
+      } else {
+        res.send('La structure des données retournées est incorrecte.');
+      }
+    })
+    .catch(error => {
+      res.send('Erreur lors de la récupération des données :' + error);
+    });
+});
+// Route de vérification du token JWT
+app.post('/verify', (req, res) => {
+  const token = req.body.token; // Récupérer le token du corps de la requête
+
+  // Vérifier si le token est valide en utilisant jwt.verify
+  jwt.verify(token, secretKey, (err, decoded) => {
+    if (err) {
+      // Si le token est invalide ou s'il y a une erreur lors de la validation
+      res.status(401).json({ valid: false, message: 'Token invalide' });
+    } else {
+      // Le token est valide, envoyez le statut 200 en réponse
+      res.status(200).json({ valid: true, message: 'Token valide' });
+    }
+  });
+});
+
+function decodeToken(token) {
+  // Ici, vous devez décoder et valider le token JWT
+  try {
+    // Vérifier et décoder le token avec votre clé secrète
+    const decoded = jwt.verify(token, secretKey);
+    return decoded; // Retourner les informations du token décodé si la vérification est réussie
+  } catch (error) {
+    throw new Error('Erreur lors du décodage du token');
+  }
+}
+// Fonction pour extraire l'ID de l'utilisateur à partir du token
+async function getUserIdFromToken(token) {
+
+  // En supposant que votre token JWT contient un champ "userId"
+  const decodedToken = decodeToken(token);
+  return decodedToken.userId; // Supposons que userId est stocké dans le token
+}
+app.get('/userItineraries', async (req, res) => {
+  const { token } = req.query;
+
+  try {
+    // Ici, vous devrez valider le token et extraire l'ID de l'utilisateur
+    // puis utiliser cet ID pour récupérer la liste des itinéraires de cet utilisateur depuis la base de données
+
+    // Supposons que vous avez récupéré l'ID de l'utilisateur à partir du token
+    const userId = getUserIdFromToken(token);
+
+    // Récupérez la liste des itinéraires pour cet utilisateur depuis la base de données
+    //const userItineraries = getUserItineraries(userId);
+    userItineraries=[];
+
+    // Rendre la page EJS avec les données des itinéraires pour l'utilisateur
+    res.render('espace', { userItineraries });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des itinéraires de l\'utilisateur :', error);
+    res.status(500).send('Erreur lors de la récupération des itinéraires de l\'utilisateur');
+  }
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
