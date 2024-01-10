@@ -10,8 +10,8 @@ router.use(bodyParser.json());
 const dbPath = path.join(__dirname, 'ma_base_de_donnees.db');
 
 
-router.post('/', (req, res) => {
-
+router.post('/enregistrer', async(req, res) => {
+  console.log("entre dans enregister");
   const utilisateur = req.body;
   const db = new SQLite3.Database(dbPath);
   // Vérifiez si les mots de passe correspondent
