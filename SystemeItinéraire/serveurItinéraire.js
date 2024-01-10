@@ -7,6 +7,7 @@ app.set('view engine', 'ejs');
 const SQLite3 = require('sqlite3').verbose();
 const dbPath = path.join(__dirname, 'itineraries.db');
 app.use(express.static('Scripts'));
+app.use(express.static('css'));
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -15,29 +16,21 @@ app.get('/connexion',(req,res)=>res.render('conexion'));
 
 app.post('/fetchData', async (req, res) => {
     try {
-        const form = new FormData();
-
-        form.append('username', req.body.email);
-        form.append('password', req.body.password);
-
         const response = await fetch('http://localhost:3000/auth/login',{
         method:'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: form
-    });
-        
-    if (!response.ok) {
-        // Si le statut n'est pas 2xx (réussi), générer une erreur
-        throw new Error(`Erreur de fetch: ${response.statusText}`);
-    }
+        body: JSON.stringify({
+            email: req.body.email,
+            password: req.body.password,
+    })
+});    
 
         if (response.status === 401) {
             const errorData = await response.json();
-            // Renvoyer une réponse JSON avec le statut 400 et le message d'erreur
-            return res.status(400).json(errorData);
-        } else {
+            res.redirect('/connexion');
+        } else if(response.status===200){
             // Vous pouvez également passer des données supplémentaires à votre modèle EJS
             const data = {
                 message: 'Votre message ici'
@@ -47,11 +40,50 @@ app.post('/fetchData', async (req, res) => {
             return res.render('espace', data);
         }
     } catch (error) {
-        console.error('Erreur lors de la récupération de la page de connexion:', error);
-        // Renvoyer une réponse JSON avec le statut 500 en cas d'erreur
-        return res.status(500).json({ error: 'Erreur lors de la récupération de la page de connexion' });
+        console.error('pas', error);
+ }
+});
+
+app.get('/inscription', (req, res) => {
+    res.render('inscription');
+});
+
+app.post('/inscription', async (req, res) => {
+    try {
+
+
+        // Effectuer la requête vers le serveur pour enregistrer l'utilisateur
+        const response = await fetch('http://localhost:3000/enregistrerUtilisateur', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nom: nom,
+                prenom: prenom,
+                email: email,
+                password: password,
+                confirmationMotDePasse: confirmationMotDePasse
+            })
+        });
+
+        // Vérifier la réponse du serveur
+        if (!response.ok) {
+            throw new Error('Erreur lors de l\'enregistrement de l\'utilisateur.');
+        }
+
+        // Afficher un message de succès
+        alert('Utilisateur enregistré avec succès !');
+
+        // Rediriger l'utilisateur vers une autre page (si nécessaire)
+        res.redirect('/accueil');
+    } catch (error) {
+        console.error(error.message);
+        // Gérer l'erreur, par exemple, renvoyer un message d'erreur au client
+        res.status(400).json({ error: error.message });
     }
 });
+
 
 /* async function fetchData() {
     try {

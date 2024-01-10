@@ -17,7 +17,7 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
     }
 
     // Envoyer les données au serveur
-    fetch('http://localhost:3000/enregistrerUtilisateur', {
+    /* fetch('http://localhost:3000/enregistrerUtilisateur', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -28,8 +28,10 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
             email: email,
             password: password,
             confirmationMotDePasse: confirmationMotDePasse
+        
         })
     })
+    
     .then(response => {
         if (!response.ok) {
             throw new Error('Erreur lors de l\'enregistrement de l\'utilisateur.');
@@ -39,5 +41,5 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
     .catch(error => {
         console.error(error);
         alert('Une erreur est survenue lors de l\'enregistrement de l\'utilisateur.');
-    });
+    }); */
 });
