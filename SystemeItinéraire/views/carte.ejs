@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8" />
+   <title>Itinéraire avec Leaflet</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+   <div id="map" style="height:400px;"></div>
+   <button onclick="setStart()">Choisir Point de Départ</button>
+   <button onclick="setEnd()">Choisir Point d'Arrêt</button>
+   <button onclick="saveRoute()">Enregistrer Itinéraire</button>
+
+   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.0/sql-wasm.js"></script>
+   <script src="carte.js"></script>
+</body>
+</html>

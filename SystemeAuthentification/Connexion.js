@@ -9,6 +9,7 @@ const passportJWT = require('passport-jwt');
 const JwtStrategy = passportJWT.Strategy;
 const ExtractJwt = passportJWT.ExtractJwt;
 const jwt = require('jsonwebtoken');
+const { error } = require('console');
 const router = express.Router();
 const dbPath = path.join(__dirname, 'ma_base_de_donnees.db');
 const secretKey = 'aqzsedrftg';
@@ -44,6 +45,7 @@ passport.use(new LocalStrategy(
 ));
 
 passport.serializeUser((user, done) => {
+    console.log("id utilisateur",user.id);
     done(null, user.id);
 });
 
@@ -77,13 +79,17 @@ const jwtOptions = {
     });
   }));
   router.post('/login', async (req, res, next) => {
+    console.log('Route de connexion atteinte sur le serveur d\'authentification');
+
     passport.authenticate('local', async (err, user, info) => {
         if (err) {
             return next(err);
         }
-
+       
         if (!user) {
-            return res.render('conexion', { message: 'Nom d\'utilisateur ou mot de passe incorrect.' });
+            /* return res.render('conexion', { message: 'Nom d\'utilisateur ou mot de passe incorrect.' }); */
+           
+            res.status(401).json({ status: 'error', message: 'Identifiants incorrects.' });
         }
         req.logIn(user, async (loginErr) => {
             if (loginErr) {
@@ -106,7 +112,8 @@ const jwtOptions = {
                         console.log('JWT enregistré avec succès');
                         console.log(token);
                         res.set('Authorization', `Bearer ${token}`);
-                        return res.redirect('/espace');
+                        res.send(JSON.stringify({'status':'200','message':'succés'}));
+                        /* return res.redirect('/espace'); */
                     }
                 });
             } catch (error) {
