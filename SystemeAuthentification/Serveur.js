@@ -4,6 +4,7 @@ const session = require('express-session');
 const loginRouter = require('./Connexion');
 const app = express();
 app.set('view engine', 'ejs');
+const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const secretKey = 'aqzsedrftg';
 
@@ -14,9 +15,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(bodyParser.json());
 app.use(express.static('SystemeAuthentification'));
-
+app.use(cors());
 
 // Assurez-vous que le chemin des vues est correct
 
@@ -75,7 +76,7 @@ app.get('/stations', (req, res) => {
 // Route de vérification du token JWT
 app.post('/verify', (req, res) => {
   const token = req.body.token; // Récupérer le token du corps de la requête
-
+  console.log(req.body);
   // Vérifier si le token est valide en utilisant jwt.verify
   jwt.verify(token, secretKey, (err, decoded) => {
     if (err) {
@@ -83,7 +84,9 @@ app.post('/verify', (req, res) => {
       res.status(401).json({ valid: false, message: 'Token invalide' });
     } else {
       // Le token est valide, envoyez le statut 200 en réponse
-      res.status(200).json({ valid: true, message: 'Token valide' });
+      
+      res.status(200).json({ valid: true, message: 'Token valide',user: decoded });
+
     }
   });
 });
