@@ -2,14 +2,17 @@ const express = require('express');
 const app = express();
 const FormData = require('form-data');
 const path = require('path');
-// Assurez-vous d'ajuster le chemin correctement
 app.set('view engine', 'ejs');
 const SQLite3 = require('sqlite3').verbose();
 const dbPath = path.join(__dirname, 'itineraries.db');
 app.use(express.static('Scripts'));
 const bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({ extended: true }));
+const cookieParser = require('cookie-parser');
+app.use(cookieParser())
 
+app.use(bodyParser.urlencoded({ extended: true }));
+let authToken="";
+let receivedToken="";
 app.get('/',(req,res)=>res.redirect('/connexion'));
 app.get('/connexion',(req,res)=>res.render('conexion'));
 app.use(express.static('css'));
@@ -35,20 +38,16 @@ app.post('/fetchData', async (req, res) => {
             // Renvoyer une réponse JSON avec le statut 400 et le message d'erreur
              res.redirect('/connexion');
         } else {
-            // Vous pouvez également passer des données supplémentaires à votre modèle EJS
-            
-            // Rendre la page 'espace' avec les données
-           
-            return res.render('espace');
+        authToken = response.headers.get('Authorization');
+        console.log('Token récupéré côté client :', authToken);
+        res.appendHeader('Set-Cookie', 'token=' + authToken);
+        return res.render('espace');
         }
     } catch (error) {
         console.error('pas', error);
  }
 });
 
-app.get('/inscription', (req, res) => {
-    res.render('inscription');
-});
 
 app.post('/inscriptions', async (req, res) => {
     try {
@@ -83,7 +82,14 @@ app.post('/inscriptions', async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
+app.get("/ficheItineraire", (req, res) =>{
+    res.render("ficheIteneraire");
+});
 
+app.post('/ficheItineraire', async (req, res) => {
+    const token=req.cookies.token;
+    res.send(token);
+});
 /* async function fetchData() {
     try {
         const response = await fetch(`${serveurAuthentification}/connexion`, {
@@ -141,6 +147,9 @@ app.post("/saveItineraire", (req, res) => {
     }
 });
 app.get('/carte',(req,res)=>res.render('carte'));
+
+
+
 
 const port=process.env.PORT || 4000;
 app.listen(port,()=>{
