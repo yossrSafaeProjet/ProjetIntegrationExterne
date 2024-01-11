@@ -45,7 +45,6 @@ passport.use(new LocalStrategy(
 ));
 
 passport.serializeUser((user, done) => {
-    console.log("id utilisateur",user.id);
     done(null, user.id);
 });
 
@@ -79,8 +78,6 @@ const jwtOptions = {
     });
   }));
   router.post('/login', async (req, res, next) => {
-    console.log('Route de connexion atteinte sur le serveur d\'authentification');
-
     passport.authenticate('local', async (err, user, info) => {
         if (err) {
             return next(err);
@@ -90,8 +87,8 @@ const jwtOptions = {
             res.status(401).json({ status: 'error', message: 'Identifiants incorrects.' });
             return;
         }
-        res.status(200).json({ status: 'succès', message: 'ok pour les identifiants' });
-
+/*         res.status(200).json({ status: 'succès', message: 'ok pour les identifiants' });
+ */
         req.logIn(user, async (loginErr) => {
             if (loginErr) {
                 return next(loginErr);

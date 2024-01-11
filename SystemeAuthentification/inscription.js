@@ -11,7 +11,6 @@ const dbPath = path.join(__dirname, 'ma_base_de_donnees.db');
 
 
 router.post('/enregistrer', async(req, res) => {
-  console.log("entre dans enregister");
   const utilisateur = req.body;
   const db = new SQLite3.Database(dbPath);
   // Vérifiez si les mots de passe correspondent
@@ -32,7 +31,6 @@ router.post('/enregistrer', async(req, res) => {
       INSERT INTO utilisateurs (nom, prenom, email, password) VALUES (?, ?, ?, ?)
     `, [utilisateur.nom, utilisateur.prenom, utilisateur.email, hashedPassword], (err) => {
       if (err) {
-        console.log(db);
         console.error(err.message);
         res.status(500).send('Erreur lors de l\'enregistrement de l\'utilisateur.');
       } else {
