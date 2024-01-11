@@ -14,37 +14,33 @@ function setStart() {
    });
 }
 
-function setEnd() {
+ function setEnd() {
    map.on('click', function (e) {
       waypoints[1] = e.latlng;
       L.marker(e.latlng).addTo(map);
       map.off('click');
-   });
-}
-
-
-function saveRoute() {
    
-       fetch('http://localhost:4000/saveItineraire', {
+   });
+} 
+ async function saveRoute() {
+   console.log("aaaaa");
+
+   try {
+       const response = await fetch('http://localhost:4000/saveItineraire', {
            method: 'POST',
            headers: {
                'Content-Type': 'application/json'
            },
-           body: JSON.stringify({ waypoints: waypoints }) 
-       })
-       .then(response => response.json())
-       .then(data =>
-           console.log('Données enregistrées avec succès côté client', data)
-       )
+           body: JSON.stringify({ waypoints: waypoints })
+       });
 
-       .catch(error =>
-           console.log("Erreur lors de l'enregistrement côté client", error)
-       );
-       
-   
+       const data = await response.json();
+       console.log('Données enregistrées avec succès côté client', data);
+   } catch (error) {
+       console.error("Erreur lors de l'enregistrement côté client", error);
+       // Gérer l'erreur côté client, par exemple, afficher un message à l'utilisateur
+   }
 }
-
-
 L.Routing.control({
    waypoints: waypoints,
    routeWhileDragging: true

@@ -9,18 +9,15 @@ const dbPath = path.join(__dirname, 'itineraries.db');
 app.use(express.static('Scripts'));
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.get('/',(req,res)=>res.redirect('/connexion'));
 app.get('/connexion',(req,res)=>res.render('conexion'));
 app.use(express.static('css'));
 app.post('/fetchData', async (req, res) => {
     try {
-        const form = new FormData();
 
-        form.append('username', req.body.email);
-        form.append('password', req.body.password);
-
-        const response = await fetch('http://localhost:3000/auth/login',{
+      const response = await fetch('http://localhost:3000/auth/login',{
         method:'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -29,12 +26,12 @@ app.post('/fetchData', async (req, res) => {
             email: req.body.email,
             password: req.body.password,
     })
-});     console.log(response.status);
+});     
 
         if (response.status === 401) {
             // Renvoyer une réponse JSON avec le statut 400 et le message d'erreur
              res.redirect('/connexion');
-        } else {
+        } else if(response.status===200) {
             // Vous pouvez également passer des données supplémentaires à votre modèle EJS
             
             // Rendre la page 'espace' avec les données
@@ -84,55 +81,17 @@ app.post('/inscriptions', async (req, res) => {
     }
 });
 
-/* async function fetchData() {
-    try {
-        const response = await fetch(`${serveurAuthentification}/connexion`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        });
-
-        if (!response.ok) {
-            console.error(`Error: ${response.status} - ${response.statusText}`);
-            // Handle error response here
-        } else {
-            const html = await response.text(); 
-            console.log(html);
-            // Récupérer le texte HTML de la réponse
-           return html;
-        }
-    } catch (error) {
-        console.error('Error during fetch:', error);
-    }
-}
-
-app.get('/fetchPage', async (req, res) => {
-    const html = await fetchData();
-
-    if (html !== null) {
-
-        res.send(html);
-        console.log(html);
-    } else {
-        res.status(500).send('Internal Server Error');
-    }
-});
- */
+const db = new SQLite3.Database(dbPath);
 app.post("/saveItineraire", (req, res) => {
     // Récupérez les données du corps de la requête
     const waypoints = req.body.waypoints;
-    console.log(waypoints);
-    const db = new SQLite3.Database(dbPath);
     if (waypoints && waypoints.length === 2) {
-        console.log(waypoints);
+        console.log("les points",waypoints);
         // Utilisez 'let' au lieu de 'var' pour déclarer la variable db
-        console.log(db);
+        console.log("db",db);
         
         var routeJSON = JSON.stringify(waypoints);
         console.log(routeJSON);
-        
-
         db.run("INSERT INTO itineraries (route) VALUES (?)", [routeJSON]);
         console.log('succès côté serveur');
         res.status(200).json({ success: true, message: 'Données enregistrées avec succès côté serveur.' });
