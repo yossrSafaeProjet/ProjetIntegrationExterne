@@ -9,16 +9,19 @@ const db = new SQLite3.Database(dbPath);
 app.use(express.static('Scripts'));
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const { error } = require('console');
 app.use(cookieParser())
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 let receivedToken="";
 app.get('/',(req,res)=>res.redirect('/connexion'));
-app.get('/connexion',(req,res)=>res.render('conexion'));
+app.get('/connexion',(req,res)=> res.render('conexion'));
 app.use(express.static('css'));
+let userIdSaved=0;
 app.post('/fetchData', async (req, res) => {
+    let authToken = req.cookies.token;
+    authToken = authToken.replace(/^Bearer\s/, '');
+    
     try {
 
       const response = await fetch('http://localhost:3000/auth/login',{
@@ -30,7 +33,20 @@ app.post('/fetchData', async (req, res) => {
             email: req.body.email,
             password: req.body.password,
     })
-});     
+});    
+const responseVerifyToken=await fetch('http://localhost:3000/verify',{
+    method:'POST',
+    headers:{
+
+       'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({token:authToken})
+         
+     });
+     const userData=await responseVerifyToken.json();
+    
+    const user=userData.user; 
+    userIdSaved=user;
 
         if (response.status === 401) {
             // Renvoyer une réponse JSON avec le statut 400 et le message d'erreur
@@ -49,7 +65,7 @@ app.post('/fetchData', async (req, res) => {
 
 
 // Récupérer le token depuis le cookie
-
+app.get('/inscription',(req,res)=>res.render('inscription'));
 app.post('/inscriptions', async (req, res) => {
     try {
         // Effectuer la requête vers le serveur pour enregistrer l'utilisateur
@@ -79,7 +95,7 @@ app.post('/inscriptions', async (req, res) => {
     }
 });
 app.get("/ficheItineraire", (req, res) =>{
-    res.render("ficheIteneraire");
+    return res.render("ficheIteneraire");
 });
 let compteur=0;
 function generateItineraryName() {
@@ -91,11 +107,11 @@ function generateItineraryName() {
   
     return itineraryName;
   }
+
 app.post("/saveItineraire", async(req, res) => {
     // Récupérez les données du corps de la requête
     const waypoints = req.body.waypoints;
     const userId=req.body.userId;
-
     if (waypoints && waypoints.length === 2) {
         // Utilisez 'let' au lieu de 'var' pour déclarer la variable db
         var routeJSON = JSON.stringify(waypoints);
@@ -115,7 +131,28 @@ app.post("/saveItineraire", async(req, res) => {
     }
 });
 app.get('/carte',(req,res)=>res.render('carte'));
-app.get('/espace',(res,req)=>res.render('espace'));
+app.get('/logout', async (req, res) => {
+    
+    try {
+        const responseDeconnexion = await fetch('http://localhost:3000/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user: userIdSaved })
+        });
+      
+        if(responseDeconnexion.status===200){
+            res.status(200).send('La déconnexion a été effectuée.');
+        } else {
+            console.error('La déconnexion a échoué. Statut du serveur:', responseDeconnexion.status);
+            res.status(500).send('La déconnexion a échoué.');
+        }
+    } catch (error) {
+        console.error('Erreur lors de la déconnexion', error);
+    } 
+ 
+});
 const port=process.env.PORT || 4000;
 app.listen(port,()=>{
     console.log("Systéme itinéraire sur le port 4000");

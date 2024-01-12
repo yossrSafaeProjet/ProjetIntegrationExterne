@@ -129,7 +129,8 @@ app.get('/userItineraries', async (req, res) => {
     res.status(500).send('Erreur lors de la récupération des itinéraires de l\'utilisateur');
   }
 });
-
+const deconnexionRoute=require('./Deconnexion');
+app.use('',deconnexionRoute);
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Serveur en cours d'exécution sur le port ${port}`);
