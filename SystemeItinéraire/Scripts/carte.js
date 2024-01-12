@@ -52,6 +52,7 @@ if (authToken) {
            body: JSON.stringify({token:tokenSansBearer})
            
        });
+       console.log('token ici ')
        const userData=await responseVerifyToken.json();
       
        if(responseVerifyToken.ok){

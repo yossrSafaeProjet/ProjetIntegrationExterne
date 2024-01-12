@@ -82,7 +82,7 @@ const jwtOptions = {
         if (err) {
             return next(err);
         }
-       
+       console.log(user);
         if (!user) {  
             res.status(401).json({ status: 'error', message: 'Identifiants incorrects.' });
             return;

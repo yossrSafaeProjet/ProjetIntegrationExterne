@@ -65,8 +65,14 @@ const responseVerifyToken=await fetch('http://localhost:3000/verify',{
 
 
 // Récupérer le token depuis le cookie
-app.get('/inscription',(req,res)=>res.render('inscription'));
-app.post('/inscriptions', async (req, res) => {
+app.get('/inscription',(req,res)=>res.render('inscription',{ mode: 'inscription' }));
+app.get('/modification',(req,res)=>res.render('inscription',{ mode: 'modification' }));
+
+
+
+
+app.get('/espace',(req,res)=>res.render('espace'));
+/* app.post('/inscriptions', async (req, res) => {
     try {
         // Effectuer la requête vers le serveur pour enregistrer l'utilisateur
         const response = await fetch('http://localhost:3000/enregistrerUtilisateur/enregistrer', {
@@ -93,7 +99,7 @@ app.post('/inscriptions', async (req, res) => {
         // Gérer l'erreur, par exemple, renvoyer un message d'erreur au client
         res.status(400).json({ error: error.message });
     }
-});
+}); */
 app.get("/ficheItineraire", (req, res) =>{
     return res.render("ficheIteneraire");
 });
@@ -153,6 +159,9 @@ app.get('/logout', async (req, res) => {
     } 
  
 });
+app.get('/fetchInformations',(req,res)=>{
+
+})
 const port=process.env.PORT || 4000;
 app.listen(port,()=>{
     console.log("Systéme itinéraire sur le port 4000");

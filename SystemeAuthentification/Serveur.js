@@ -50,6 +50,8 @@ app.use('/auth', loginRouter);
 
 const registrationRouter = require('./inscription');
 app.use('/enregistrerUtilisateur', registrationRouter);
+app.use('',registrationRouter);
+app.use('/patch',registrationRouter);
 
 app.get('/stations', (req, res) => {
   fetch('https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?limit=5')
