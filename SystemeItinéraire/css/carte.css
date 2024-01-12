@@ -1,0 +1,48 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+#map {
+    height: 400px;
+    margin-bottom: 10px;
+}
+
+button {
+    display: block;
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #3498db; /* Bleu */
+    color: #fff;
+    border:#e74c3c;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #2980b9; /* Bleu plus foncé au survol */
+}
+
+.prev-button {
+    background-color: burlywood;/* Rouge */
+    color: #fff;
+    position: fixed;
+    bottom: 300px;
+    right: 30px;
+    
+
+}
+
+.prev-button:hover {
+    background-color: #c0392b; /* Rouge plus foncé au survol */
+}
+button:nth-child(4) {
+    background-color: #e74c3c;
+    position: fixed;
+    bottom: 350px;
+    right: 10px; /* Rouge */
+}
+
+button:nth-child(4):hover {
+    background-color: #c0392b; /* Rouge plus foncé au survol */
+}

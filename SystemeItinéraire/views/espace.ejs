@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard</title>
+    <link rel="stylesheet" href="espace.css" />
 </head>
 <body>
+    <div class="navbar">
+        <a href="#" class="nav-item">Informations personnelles</a>
+        <a onclick="logout()" class="nav-item">Déconnexion</a>
+    </div>
     <h1>Liste des Itinéraires</h1>
 
     <table border="1">
@@ -23,12 +28,25 @@
     <form id="itineraryForm" action="/createItinerary" method="post">
         <button type="submit">Nouvel Itinéraire</button>
     </form>
+    
+
     <script>
         document.getElementById("itineraryForm").addEventListener("submit", function(event) {
         event.preventDefault(); // Empêche le comportement par défaut du formulaire
 
         window.location.href = "/carte"; 
     });
+    async function logout() {
+    try {
+        const response = await fetch('http://localhost:4000/logout');
+        // Ajoutez ici toute autre logique que vous souhaitez effectuer après la déconnexion
+     if(response.status===200){
+        window.location.href = "/connexion"; 
+     }
+    } catch (error) {
+        console.error('Erreur lors de la déconnexion', error);
+    }
+}
     </script>
 </body>
 </html>

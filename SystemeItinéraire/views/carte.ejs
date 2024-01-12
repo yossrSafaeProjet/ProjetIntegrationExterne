@@ -5,6 +5,7 @@
    <title>Itinéraire avec Leaflet</title>
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+   <link rel="stylesheet" href="carte.css" />
 </head>
 <body>
    
@@ -12,7 +13,7 @@
    <button onclick="setStart()">Choisir Point de Départ</button>
    <button onclick="setEnd()">Choisir Point d'Arrêt</button>
    <button onclick="saveRoute()">Enregistrer Itinéraire</button>
-   <button onclick="retour()">Précédent</button>
+   <button class="prev-button" onclick="retour()">Précédent</button>
    
    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
