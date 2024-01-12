@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 
 const path = require('path');
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 const SQLite3 = require('sqlite3').verbose();
 const dbPath = path.join(__dirname, 'itineraries.db');
@@ -53,7 +54,7 @@ const responseVerifyToken=await fetch('http://localhost:3000/verify',{
              res.redirect('/connexion');
         } else if(response.status=== 200) {
         authToken = response.headers.get('Authorization');
-        console.log('Token récupéré côté client :', authToken);
+        //console.log('Token récupéré côté client :', authToken);
         res.appendHeader('Set-Cookie', 'token=' + authToken);
         return res.render('espace');
         }
@@ -94,8 +95,67 @@ app.post('/inscriptions', async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-app.get("/ficheItineraire", (req, res) =>{
-    return res.render("ficheIteneraire");
+app.post('/ficheItineraire/:id', async (req, res) => {
+    console.log("id");
+    const itineraireId = parseInt(req.params.id, 10);
+    const db = new SQLite3.Database(dbPath);
+    // Requête SQL pour récupérer l'itinéraire par ID
+    const sql = 'SELECT * FROM itineraries WHERE id = ?';
+  
+    // Exécutez la requête avec le paramètre itineraireId
+    db.get(sql, [itineraireId], async (err, row) => {
+        if (err) {
+            console.error('Erreur lors de la récupération de l\'itinéraire depuis la base de données:', err.message);
+            res.status(500).json({ error: 'Erreur lors de la récupération de l\'itinéraire' });
+        } else if (row) {
+            // Informations de l'itinéraire récupérées avec succès
+            const itineraireInfo = row;
+
+            // Récupération du token depuis les cookies
+            const token = req.cookies.token;
+            const tokenSansBearer = token.replace(/^Bearer\s/, '');
+
+            try {
+                // Envoi du token et des informations de l'itinéraire au serveur systemepdf
+                const response = await fetch('http://localhost:5000/itineraire', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: tokenSansBearer,
+                        itineraireInfo: itineraireInfo  // Passer les informations de l'itinéraire
+                    })
+                });
+
+                console.log("les information ",itineraireInfo );
+
+                // Envoyez la réponse au client, ou effectuez toute autre action nécessaire
+                res.status(response.status).json({ success: true, message: "Informations d'itinéraire envoyées avec succès" });
+            } catch (error) {
+                console.error("Erreur lors de la requête fetch :", error.message);
+                res.status(500).json({ success: false, message: "Erreur lors de la requête fetch" });
+            }
+        } else {
+            res.status(404).json({ error: 'Itinéraire non trouvé' });
+        }
+    });
+});
+
+app.get("/getFichierPdf/:id", (req, res) =>{
+    const itineraireId = req.params.id;
+    const currentDirectory = __dirname;
+    const pdfFilePath = path.join(currentDirectory, "itineraire.pdf");
+    fs.readFile(pdfFilePath, (err, data) => {
+        if (err) {
+            console.error('Erreur lors de la lecture du fichier PDF:', err.message);
+            res.status(500).send('Erreur lors de la lecture du fichier PDF');
+        } else {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=itineraire.pdf`);
+            res.send(data);
+        }
+    });
 });
 let compteur=0;
 function generateItineraryName() {
@@ -108,7 +168,82 @@ function generateItineraryName() {
     return itineraryName;
   }
 
-app.post("/saveItineraire", async(req, res) => {
+
+app.get("/getIteneraires", async (req, res) => {
+    try {
+        const token = req.cookies.token;
+        tokenSansBearer = token.replace(/^Bearer\s/, '');
+        const verifyResponse = await fetch('http://localhost:3000/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                token: tokenSansBearer
+            })
+        });
+
+        if (verifyResponse.ok) {
+            const verifyData = await verifyResponse.json();
+            //console.log('Token reçu côté serveur:', verifyData);
+            const db = new SQLite3.Database(dbPath);
+            const userId = verifyData.user.userId; // Assurez-vous que votre token a un champ 'sub' avec l'ID utilisateur
+            //console.log("id::",userId);
+            db.all('SELECT * FROM itineraries WHERE idUser = ?', [userId], (err, rows) => {
+                if (err) {
+                    console.error('Erreur lors de la récupération des itinéraires depuis la base de données:', err.message);
+                    res.status(500).json({ error: 'Erreur lors de la récupération des itinéraires' });
+                } else {
+                    res.json(rows);
+
+                }
+            });
+        } else {
+            console.log('Validation du token échouée');
+            res.status(401).json({ error: 'Validation du token échouée' });
+        }
+    } catch (error) {
+        console.error('Erreur générale:', error.message);
+        res.status(500).json({ error: 'Erreur générale' });
+    }
+});
+
+/* async function fetchData() {
+    try {
+        const response = await fetch(`${serveurAuthentification}/connexion`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+
+        if (!response.ok) {
+            console.error(`Error: ${response.status} - ${response.statusText}`);
+            // Handle error response here
+        } else {
+            const html = await response.text(); 
+            console.log(html);
+            // Récupérer le texte HTML de la réponse
+           return html;
+        }
+    } catch (error) {
+        console.error('Error during fetch:', error);
+    }
+}
+
+app.get('/fetchPage', async (req, res) => {
+    const html = await fetchData();
+
+    if (html !== null) {
+
+        res.send(html);
+        console.log(html);
+    } else {
+        res.status(500).send('Internal Server Error');
+    }
+});
+ */
+app.post("/saveItineraire", (req, res) => {
     // Récupérez les données du corps de la requête
     const waypoints = req.body.waypoints;
     const userId=req.body.userId;
