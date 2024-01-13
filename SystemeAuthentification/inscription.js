@@ -39,40 +39,35 @@ router.post('/enregistrer', async(req, res) => {
     });
   });
 });
+const db = new SQLite3.Database(dbPath);
+
+router.get('/informationPersonnelles/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+      // Exemple de données fictives à partir de la base de données
+      const donneesUtilisateur = await new Promise((resolve, reject) => {
+          db.all("SELECT * FROM utilisateurs WHERE id = ?", [id], (err, rows) => {
+              if (err) {
+                  console.error("Erreur lors de la récupération des données :", err.message);
+                  reject(err);
+              } else {
+                  console.log("Contenu de la table utilisateurs :", rows);
+                  resolve(rows);
+              }
+          });
+      });
+
+      res.json(donneesUtilisateur);
+  } catch (error) {
+      // Gestion des erreurs
+      console.error('Erreur lors de la récupération des données de la base de données:', error);
+      res.status(500).json({ error: 'Erreur interne du serveur' });
+}});
+
 
 router.patch('/:id', (req, res) => {
   const utilisateurId = req.params.id;
   const utilisateurModifie = req.body;
-  const db = new SQLite3.Database(dbPath);
-
-  // Vérifiez si les mots de passe correspondent
-  if (utilisateurModifie.password && utilisateurModifie.password !== utilisateurModifie.confirmationMotDePasse) {
-      res.status(400).send('Les mots de passe ne correspondent pas. Veuillez réessayer.');
-      return;
-  }
-
-  // Hasher le nouveau mot de passe si fourni
-  if (utilisateurModifie.password) {
-      bcrypt.hash(utilisateurModifie.password, 10, (err, hashedPassword) => {
-          if (err) {
-              console.error(err);
-              res.status(500).send('Erreur lors du hashage du mot de passe.');
-              return;
-          }
-
-          // Mettez à jour l'utilisateur avec le mot de passe hashé
-          db.run(`
-              UPDATE utilisateurs SET nom = ?, prenom = ?, email = ?, password = ? WHERE id = ?
-          `, [utilisateurModifie.nom, utilisateurModifie.prenom, utilisateurModifie.email, hashedPassword, utilisateurId], (err) => {
-              if (err) {
-                  console.error(err.message);
-                  res.status(500).send('Erreur lors de la mise à jour de l\'utilisateur.');
-              } else {
-                  res.send('Utilisateur mis à jour avec succès.');
-              }
-          });
-      });
-  } else {
       // Si le mot de passe n'est pas modifié, mettez à jour l'utilisateur sans changer le mot de passe
       db.run(`
           UPDATE utilisateurs SET nom = ?, prenom = ?, email = ? WHERE id = ?
@@ -81,9 +76,10 @@ router.patch('/:id', (req, res) => {
               console.error(err.message);
               res.status(500).send('Erreur lors de la mise à jour de l\'utilisateur.');
           } else {
+            console.log("modifié",utilisateurModifie)
               res.send('Utilisateur mis à jour avec succès.');
           }
       });
-  }
 });
+
 module.exports = router;

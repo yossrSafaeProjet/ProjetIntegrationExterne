@@ -7,7 +7,7 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="#" class="nav-item">Informations personnelles</a>
+        <a onclick="getData()"  class="nav-item"   >Informations personnelles</a>
         <a onclick="logout()" class="nav-item">Déconnexion</a>
     </div>
     <h1>Liste des Itinéraires</h1>
@@ -25,7 +25,7 @@
         </tbody>
     </table>
 
-    <form id="itineraryForm" action="/createItinerary" method="post">
+    <form id="itineraryForm" action="/carte" method="get">
         <button type="submit">Nouvel Itinéraire</button>
     </form>
     

@@ -66,7 +66,13 @@ const responseVerifyToken=await fetch('http://localhost:3000/verify',{
 
 
 // Récupérer le token depuis le cookie
-app.get('/inscription',(req,res)=>res.render('inscription'));
+app.get('/inscription',(req,res)=>res.render('inscription',{ mode: 'inscription' }));
+app.get('/modification',(req,res)=>res.render('inscription',{ mode: 'modification' }));
+
+
+
+
+app.get('/espace',(req,res)=>res.render('espace'));
 app.post('/inscriptions', async (req, res) => {
     try {
         // Effectuer la requête vers le serveur pour enregistrer l'utilisateur
@@ -95,7 +101,7 @@ app.post('/inscriptions', async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-app.post('/ficheItineraire/:id', async (req, res) => {
+/*app.post('/ficheItineraire/:id', async (req, res) => {
     console.log("id");
     const itineraireId = parseInt(req.params.id, 10);
     const db = new SQLite3.Database(dbPath);
@@ -156,6 +162,9 @@ app.get("/getFichierPdf/:id", (req, res) =>{
             res.send(data);
         }
     });
+}); */
+app.get("/ficheItineraire", (req, res) =>{
+    return res.render("ficheIteneraire");
 });
 let compteur=0;
 function generateItineraryName() {
@@ -208,44 +217,72 @@ app.get("/getIteneraires", async (req, res) => {
     }
 });
 
-/* async function fetchData() {
-    try {
-        const response = await fetch(`${serveurAuthentification}/connexion`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        });
+const geolib = require('geolib'); // Assurez-vous d'avoir installé cette bibliothèque via npm install geolib
+app.get('/station',(req,res)=>res.render('stations'));
+const distances = [];
+let stationsWithDistances = [];
+app.post('/station', (req, res) => {
+    // Supposons que les waypoints soient passés dans la requête
+    const waypoints = req.body.waypoints;
 
-        if (!response.ok) {
-            console.error(`Error: ${response.status} - ${response.statusText}`);
-            // Handle error response here
-        } else {
-            const html = await response.text(); 
-            console.log(html);
-            // Récupérer le texte HTML de la réponse
-           return html;
-        }
-    } catch (error) {
-        console.error('Error during fetch:', error);
+    if (!waypoints || waypoints.length === 0) {
+        return res.status(400).json({ error: 'Les waypoints ne sont pas spécifiés ou mal définis.' });
+    }
+
+    fetch('https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?limit=5&timestamp=${Date.now()}')
+        .then(response => response.json())
+        .then(data => {
+            if (data && typeof data === 'object') { // Modification ici
+                const record = data; // Modification ici
+/*                 const recordJson=JSON.stringify(record, null, 2);
+    console.log(record.coordonnees_geo.object); */
+  /*   const coordinates=record.results[0].coordonnees_geo.lat;
+    console.log(coordinates); */
+    
+for (let i = 0; i < record.results.length; i++) {
+    const station = record.results[i];
+
+    if (station.coordonnees_geo && station.coordonnees_geo.lat && station.coordonnees_geo.lon) {
+        const distance = geolib.getDistance(
+            { latitude: station.coordonnees_geo.lat, longitude: station.coordonnees_geo.lon },
+            waypoints[0]
+        );
+        distances.push(distance);
+        const stationWithDistance = {
+            name: station.name,
+            isInstalled: station.is_installed,
+            bikesAvailable: station.numbikesavailable,
+            capacity: station.capacity,
+            distance: distance,
+        };
+
+        stationsWithDistances.push(stationWithDistance);
+    } else {
+        console.error('Les coordonnées géo sont absentes ou mal définies dans les données.');
     }
 }
+/* res.render('stations', { stations:stationsWithDistances} );  
+ */          
+res.render('stations', { stations:stationsWithDistances} ); 
 
-app.get('/fetchPage', async (req, res) => {
-    const html = await fetchData();
+                } 
+ 
 
-    if (html !== null) {
-
-        res.send(html);
-        console.log(html);
-    } else {
-        res.status(500).send('Internal Server Error');
-    }
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des données côté serveur :', error);
+            res.status(500).json({ error: 'Erreur lors de la récupération des données :' + error.message });
+        });
+        
 });
- */
+
+
+
+
 app.post("/saveItineraire", (req, res) => {
     // Récupérez les données du corps de la requête
     const waypoints = req.body.waypoints;
+    console.log("body",req.body);
     const userId=req.body.userId;
     if (waypoints && waypoints.length === 2) {
         // Utilisez 'let' au lieu de 'var' pour déclarer la variable db
@@ -288,6 +325,9 @@ app.get('/logout', async (req, res) => {
     } 
  
 });
+app.get('/fetchInformations',(req,res)=>{
+
+})
 const port=process.env.PORT || 4000;
 app.listen(port,()=>{
     console.log("Systéme itinéraire sur le port 4000");

@@ -50,8 +50,10 @@ app.use('/auth', loginRouter);
 
 const registrationRouter = require('./inscription');
 app.use('/enregistrerUtilisateur', registrationRouter);
+app.use('',registrationRouter);
+app.use('/patch',registrationRouter);
 
-app.get('/stations', (req, res) => {
+/* app.get('/stations', (req, res) => {
   fetch('https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?limit=5')
     .then(response => response.json())
     .then(data => {
@@ -72,7 +74,7 @@ app.get('/stations', (req, res) => {
     .catch(error => {
       res.send('Erreur lors de la récupération des données :' + error);
     });
-});
+}); */
 // Route de vérification du token JWT
 app.post('/verify', (req, res) => {
   const token = req.body.token; // Récupérer le token du corps de la requête

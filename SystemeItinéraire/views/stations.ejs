@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stations Velib</title>
+</head>
+<body >
+    <h1>Stations Velib</h1>
+    
+    <ul >
+        <% stations.forEach(station => { %>
+            <li>
+                <p>Name: <%= station.name %></p>
+                <p>Installed: <%= station.isInstalled %></p>
+                <p>Bikes Available: <%= station.bikesAvailable %></p>
+                <p>Capacity: <%= station.capacity %></p>
+            </li>
+        <% }); %>
+    </ul>
+    <script src="carte.js"></script>
+</body>
+</html>

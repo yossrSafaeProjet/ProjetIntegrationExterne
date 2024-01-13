@@ -14,17 +14,28 @@
         <input type="text" id="prenom" name="prenom"><br><br>
 
         <label for="email">Nom d'utilisateur :</label>
-        <input type="email" id="email" name="email"><br><br>
+        <input type="email" id="email" name="email" autocomplete="new email"><br><br>
 
-        <label for="password*">Mot de passe :</label>
-        <input type="password" id="password" name="password"><br><br>
-
+        <label for="password">Mot de passe :</label>
+        <input  type="password" id="password" name="password" autocomplete="new-password"
+        ><br><br>
+        
         <label for="confirmationMotDePasse">Confirmation du mot de passe :</label>
-        <input type="password" id="confirmationMotDePasse" name="confirmationMotDePasse"><br><br>
+        <input    type="password" id="confirmationMotDePasse" name="confirmationMotDePasse" autocomplete="new-password"
+     ><br><br>
 
         <span id="message"></span><br>
-        <input type="submit"  value="Enregistrer">
+        <button   id="submitButton" value="Enregistrer"> Enregistrer</button>
+        <script>
+            var mode = "<%= mode %>"; // Récupérez la valeur de mode depuis le serveur ici
 
+            function updateSubmitButtonText() {
+                const submitButton = document.getElementById('submitButton');
+                submitButton.textContent = (mode === "modification") ? "Modifier" : "Enregistrer";
+            }
+
+            updateSubmitButtonText(); // Appelez cette fonction au chargement de la page pour définir le texte initial du bouton
+        </script>
     </form>
     <script src="scriptInscription.js"></script>
 </body>
