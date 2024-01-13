@@ -32,7 +32,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("ccc");
             try {
                 const response = await fetch('http://localhost:4000/getIteneraires');
                 console.log(response);
@@ -60,10 +59,8 @@
                     <td>
                     <form action="ficheItineraire/${itineraire.id}" method="post">
                     <input type="hidden" name="itineraireId" value="${itineraire.id}">
-                    <a href="http://localhost:4000/ficheItineraire/${itineraire.id}" target="_blank">
                     <input id="telechargerButton" type="submit" value="Télécharger pdf">
                     </form>
-                    </a>
             </td>
         `;
         tbody.appendChild(row);
@@ -75,24 +72,11 @@
 
         window.location.href = "/carte"; 
     });
-    async function logout() {
-    try {
-        const response = await fetch('http://localhost:4000/logout');
-        // Ajoutez ici toute autre logique que vous souhaitez effectuer après la déconnexion
-     if(response.status===200){
-        window.location.href = "/connexion"; 
-     }
-    } catch (error) {
-        console.error('Erreur lors de la déconnexion', error);
-    }
-}
-$(document).ready(function () {
-        // Écoutez l'événement de clic sur le bouton
-        $("#telechargementForm").submit(function (event) {
-            // Empêchez le comportement par défaut du formulaire
-            event.preventDefault();
-            // Obtenez l'ID de l'itinéraire à partir du champ caché
-            const itineraireId = $("input[name='itineraireId']").val();
+    document.querySelectorAll(".telechargerButton").forEach(button => {
+                button.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    console.log("okkk");
+                    const itineraireId = this.parentNode.querySelector("input[name='itineraireId']").value;
 
             // Envoyez une requête AJAX pour déclencher la route
             $.ajax({
@@ -107,8 +91,22 @@ $(document).ready(function () {
                     console.error("Erreur :", error);
                 }
             });
-        });
-    });
+            console.log("Itineraire ID:", itineraireId);
+                });
+            });
+
+    async function logout() {
+    try {
+        const response = await fetch('http://localhost:4000/logout');
+        // Ajoutez ici toute autre logique que vous souhaitez effectuer après la déconnexion
+     if(response.status===200){
+        window.location.href = "/connexion"; 
+     }
+    } catch (error) {
+        console.error('Erreur lors de la déconnexion', error);
+    }
+}
+
     </script>
 </body>
 </html>

@@ -88,12 +88,12 @@ const jwtOptions = {
         if (!user) {
             return res.status(401).json({ status: 'error', message: 'Identifiants incorrects.' });
         }
-
+        else
+        {
         req.logIn(user, async (loginErr) => {
             if (loginErr) {
                 return next(loginErr);
             }
-
             try {
                 const token = jwt.sign({
                     userId: user.id
@@ -118,6 +118,7 @@ const jwtOptions = {
                 return res.status(500).send('Erreur lors de la connexion');
             }
         });
+        }
     })(req, res, next);
 });
 

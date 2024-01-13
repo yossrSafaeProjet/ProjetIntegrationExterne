@@ -26,7 +26,7 @@ app.post('/itineraire', async (req, res) => {
     if (verifyResponse.ok) {
       console.log('Token validé avec succès');
         // Générer le PDF avec pdfkit
-        const pdfFileName = 'itineraire.pdf'; // Nom du fichier PDF
+        const pdfFileName = `itineraire${itineraireInfo.id}.pdf`; // Nom du fichier PDF
 
         const pdfDoc = new PDFDocument();
         pdfDoc.pipe(fs.createWriteStream(pdfFileName));

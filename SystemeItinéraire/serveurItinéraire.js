@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const fs = require('fs');
 
 const path = require('path');
 app.set('views', path.join(__dirname, 'views'));
@@ -131,7 +132,8 @@ app.post('/ficheItineraire/:id', async (req, res) => {
                 console.log("les information ",itineraireInfo );
 
                 // Envoyez la réponse au client, ou effectuez toute autre action nécessaire
-                res.status(response.status).json({ success: true, message: "Informations d'itinéraire envoyées avec succès" });
+                //res.status(response.status).json({ success: true, message: "Informations d'itinéraire envoyées avec succès" });
+                res.render("getFichierPdf");
             } catch (error) {
                 console.error("Erreur lors de la requête fetch :", error.message);
                 res.status(500).json({ success: false, message: "Erreur lors de la requête fetch" });
@@ -142,20 +144,31 @@ app.post('/ficheItineraire/:id', async (req, res) => {
     });
 });
 
-app.get("/getFichierPdf/:id", (req, res) =>{
-    const itineraireId = req.params.id;
-    const currentDirectory = __dirname;
-    const pdfFilePath = path.join(currentDirectory, "itineraire.pdf");
-    fs.readFile(pdfFilePath, (err, data) => {
-        if (err) {
-            console.error('Erreur lors de la lecture du fichier PDF:', err.message);
-            res.status(500).send('Erreur lors de la lecture du fichier PDF');
+app.post("/getFichierPdf/:id", (req, res) => {
+    try {
+        const itineraireId = req.params.id;
+        const currentDirectory = "C:/Users/skissami/Projet_integration/ProjetIntegrationExterne/ProjetIntegrationExterne/SystemePdf";
+        const pdfFileName = `itineraire${itineraireId}.pdf`;
+        const pdfFilePath = path.join(currentDirectory, pdfFileName);
+
+        if (fs.existsSync(pdfFilePath)) {
+            fs.readFile(pdfFilePath, (err, data) => {
+                if (err) {
+                    console.error('Erreur lors de la lecture du fichier PDF:', err.message);
+                    res.status(500).send('Erreur lors de la lecture du fichier PDF');
+                } else {
+                    res.setHeader('Content-Type', 'application/pdf');
+                    res.setHeader('Content-Disposition', `attachment; filename=${pdfFileName}`);
+                    res.send(data);            }
+            });
         } else {
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=itineraire.pdf`);
-            res.send(data);
+            console.error('Le fichier PDF n\'existe pas:', pdfFilePath);
+            res.status(404).send('Fichier PDF introuvable');
         }
-    });
+    } catch (error) {
+        console.error('Erreur lors de la récupération du fichier PDF:', error.message);
+        res.status(500).send('Erreur lors de la récupération du fichier PDF');
+    }
 });
 let compteur=0;
 function generateItineraryName() {

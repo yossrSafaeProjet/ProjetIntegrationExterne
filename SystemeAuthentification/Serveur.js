@@ -8,7 +8,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const secretKey = 'aqzsedrftg';
 
-app.use(session({ secret: 'cle_session', resave: true, saveUninitialized: true }));
+app.use(session({ secret: 'session_key', resave: true, saveUninitialized: true }));
 
 // Initialisez passport après la configuration de la session
 app.use(passport.initialize());
