@@ -1,4 +1,4 @@
-/* document.addEventListener('DOMContentLoaded', async function () {
+document.addEventListener('DOMContentLoaded', async function () {
     // Fonction pour récupérer les données utilisateur
     async function getDataPerso() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -29,8 +29,9 @@
     let userData = await getDataPerso();
 
     // Fonction pour enregistrer ou modifier les données
-    async function EnregistrerData() {
-     if (!userData) {
+    async function EnregistrerData(event) {
+        event.preventDefault();
+        if (!userData) {
             try {
                 // Effectuer la requête vers le serveur pour enregistrer le nouvel utilisateur
                 const response = await fetch('http://localhost:3000/enregistrerUtilisateur/enregistrer', {
@@ -57,9 +58,8 @@
                 // Gérer l'erreur, par exemple, renvoyer un message d'erreur au client
                 res.status(400).json({ error: error.message });
             }
-        } else  if (userData) {
+        } else if (userData) {
             // Mode modification
-            console.log("entré ici");
             
             try {
                 // Effectuer la requête vers le serveur pour mettre à jour l'utilisateur existant
@@ -70,19 +70,21 @@
                     },
                     body: JSON.stringify({
                         id: userData[0].id,
-                        nom: userData[0].nom,
-                        prenom: userData[0].prenom,
-                        email: userData[0].email,
+                        nom: document.getElementById('nom').value,
+                        prenom:  document.getElementById('prenom').value,
+                        email:document.getElementById('email').value,
+                        password: document.getElementById('password').value,
+                        confirmationMotDePasse:document.getElementById('confirmationMotDePasse').value,
                     })
                 });
-            
+         /*        userData[0].nom=document.getElementById('nom').value;
+                
+                userData[0].prenom=document.getElementById('prenom').value;
+                userData[0].email=document.getElementById('email').value;  */
                 if (responseData.status === 200) {
                     // Rediriger vers la page de l'espace après la modification
-                    userData[0].nom=document.getElementById('nom').value;
-                console.log("le nom modifié" ,userData[0].nom);
-                    userData[0].prenom=document.getElementById('prenom').value;
-                    userData[0].email=document.getElementById('prenom').value;
-                    window.location.href = '/espace';
+                    
+                    window.location.href = '/espace'; 
                 }
             } catch (error) {
                 console.error(error.message);
@@ -92,6 +94,5 @@
     }
 
     // Appeler la fonction d'enregistrement/modification lors du clic sur le bouton
-     document.getElementById('submitButton').addEventListener('click', EnregistrerData);
- });
- */
+    document.getElementById('submitButton').addEventListener('click', EnregistrerData);
+});

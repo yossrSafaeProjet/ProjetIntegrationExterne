@@ -219,8 +219,7 @@ app.get("/getIteneraires", async (req, res) => {
 
 const geolib = require('geolib'); // Assurez-vous d'avoir installé cette bibliothèque via npm install geolib
 app.get('/station',(req,res)=>res.render('stations'));
-const distances = [];
-let stationsWithDistances = [];
+
 app.post('/station', (req, res) => {
     // Supposons que les waypoints soient passés dans la requête
     const waypoints = req.body.waypoints;
@@ -234,11 +233,9 @@ app.post('/station', (req, res) => {
         .then(data => {
             if (data && typeof data === 'object') { // Modification ici
                 const record = data; // Modification ici
-/*                 const recordJson=JSON.stringify(record, null, 2);
-    console.log(record.coordonnees_geo.object); */
-  /*   const coordinates=record.results[0].coordonnees_geo.lat;
-    console.log(coordinates); */
-    
+
+                const distances = [];
+                let stationsWithDistances = [];
 for (let i = 0; i < record.results.length; i++) {
     const station = record.results[i];
 
@@ -262,8 +259,12 @@ for (let i = 0; i < record.results.length; i++) {
     }
 }
 /* res.render('stations', { stations:stationsWithDistances} );  
- */          
-res.render('stations', { stations:stationsWithDistances} ); 
+ */        
+stationsWithDistances.sort((a, b) => a.distance - b.distance);
+
+// Sélection des 3 stations avec la distance la plus basse
+const nearestStations = stationsWithDistances.slice(0, 3);  
+res.render('stations', { stations:nearestStations} ); 
 
                 } 
  
