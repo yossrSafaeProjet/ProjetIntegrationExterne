@@ -14,6 +14,8 @@ const router = express.Router();
 const dbPath = path.join(__dirname, 'ma_base_de_donnees.db');
 const secretKey = 'aqzsedrftg';
 router.use(express.json());
+
+
 const db = new SQLite3.Database(dbPath);
 // Configurations Passport
 passport.use(new LocalStrategy(
@@ -87,20 +89,19 @@ const jwtOptions = {
             res.status(401).json({ status: 'error', message: 'Identifiants incorrects.' });
             return;
         }
-/*         res.status(200).json({ status: 'succès', message: 'ok pour les identifiants' });
- */
+
         req.logIn(user, async (loginErr) => {
             if (loginErr) {
                 return next(loginErr);
             }
-            
+
             try {
                 const token = jwt.sign({
                     userId: user.id
                 }, secretKey);
-    
+
                 const expirationTime = new Date(Date.now() + 3600000);
-    
+
                 // Insérer le JWT dans la base de données
                 db.run('INSERT INTO jwt_tokens (user_id, token, expires_at, is_revoked) VALUES (?, ?, ?, 0)', [user.id, token, expirationTime], (insertErr) => {
                     if (insertErr) {
@@ -110,7 +111,7 @@ const jwtOptions = {
                         console.log('JWT enregistré avec succès');
                         console.log(token);
                         res.set('Authorization', `Bearer ${token}`);
-                        res.send(JSON.stringify({'status':'200','message':'succés'}));
+                        res.status(200).json({ status: 'succès', message: 'ok pour les identifiants' });
                     }
                 });
             } catch (error) {
@@ -120,5 +121,6 @@ const jwtOptions = {
         });
     })(req, res, next);
 });
+
 
 module.exports = router;

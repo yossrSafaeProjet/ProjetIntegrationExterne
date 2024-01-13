@@ -53,7 +53,7 @@ app.use('/enregistrerUtilisateur', registrationRouter);
 app.use('',registrationRouter);
 app.use('/patch',registrationRouter);
 
-app.get('/stations', (req, res) => {
+/* app.get('/stations', (req, res) => {
   fetch('https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?limit=5')
     .then(response => response.json())
     .then(data => {
@@ -74,24 +74,32 @@ app.get('/stations', (req, res) => {
     .catch(error => {
       res.send('Erreur lors de la récupération des données :' + error);
     });
-});
+}); */
 // Route de vérification du token JWT
 app.post('/verify', (req, res) => {
   const token = req.body.token; // Récupérer le token du corps de la requête
+
+  if (!token) {
+    console.error('Token non fourni dans la requête.');
+    return res.status(400).json({ valid: false, message: 'Token non fourni' });
+  }
+
+  console.log("Le token reçu côté serveur:", token);
+
   console.log(req.body);
   // Vérifier si le token est valide en utilisant jwt.verify
   jwt.verify(token, secretKey, (err, decoded) => {
     if (err) {
-      // Si le token est invalide ou s'il y a une erreur lors de la validation
-      res.status(401).json({ valid: false, message: 'Token invalide' });
+      console.error('Erreur lors de la vérification du token:', err.message);
+      return res.status(401).json({ valid: false, message: 'Token invalide' });
     } else {
-      // Le token est valide, envoyez le statut 200 en réponse
-      
-      res.status(200).json({ valid: true, message: 'Token valide',user: decoded });
-
+      console.log('Le token est valide.');
+      return res.status(200).json({ valid: true, message: 'Token valide' ,user:decoded });
     }
   });
 });
+
+
 
 function decodeToken(token) {
   // Ici, vous devez décoder et valider le token JWT

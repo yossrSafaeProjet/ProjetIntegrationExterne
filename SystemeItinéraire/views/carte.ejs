@@ -14,10 +14,12 @@
    <button onclick="setEnd()">Choisir Point d'Arrêt</button>
    <button onclick="saveRoute()">Enregistrer Itinéraire</button>
    <button class="prev-button" onclick="retour()">Précédent</button>
-   
+      <a  id='result-container' onclick="getStationProches()">Voir les stations les plus proches</a>
+  
    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.0/sql-wasm.js"></script>
+
    <script src="carte.js"></script>
 </body>
 </html>

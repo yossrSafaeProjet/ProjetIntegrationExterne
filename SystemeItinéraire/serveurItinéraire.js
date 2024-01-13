@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 
 const path = require('path');
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 const SQLite3 = require('sqlite3').verbose();
 const dbPath = path.join(__dirname, 'itineraries.db');
@@ -53,7 +54,7 @@ const responseVerifyToken=await fetch('http://localhost:3000/verify',{
              res.redirect('/connexion');
         } else if(response.status=== 200) {
         authToken = response.headers.get('Authorization');
-        console.log('Token récupéré côté client :', authToken);
+        //console.log('Token récupéré côté client :', authToken);
         res.appendHeader('Set-Cookie', 'token=' + authToken);
         return res.render('espace');
         }
@@ -72,7 +73,7 @@ app.get('/modification',(req,res)=>res.render('inscription',{ mode: 'modificatio
 
 
 app.get('/espace',(req,res)=>res.render('espace'));
-/* app.post('/inscriptions', async (req, res) => {
+app.post('/inscriptions', async (req, res) => {
     try {
         // Effectuer la requête vers le serveur pour enregistrer l'utilisateur
         const response = await fetch('http://localhost:3000/enregistrerUtilisateur/enregistrer', {
@@ -99,6 +100,68 @@ app.get('/espace',(req,res)=>res.render('espace'));
         // Gérer l'erreur, par exemple, renvoyer un message d'erreur au client
         res.status(400).json({ error: error.message });
     }
+});
+/*app.post('/ficheItineraire/:id', async (req, res) => {
+    console.log("id");
+    const itineraireId = parseInt(req.params.id, 10);
+    const db = new SQLite3.Database(dbPath);
+    // Requête SQL pour récupérer l'itinéraire par ID
+    const sql = 'SELECT * FROM itineraries WHERE id = ?';
+  
+    // Exécutez la requête avec le paramètre itineraireId
+    db.get(sql, [itineraireId], async (err, row) => {
+        if (err) {
+            console.error('Erreur lors de la récupération de l\'itinéraire depuis la base de données:', err.message);
+            res.status(500).json({ error: 'Erreur lors de la récupération de l\'itinéraire' });
+        } else if (row) {
+            // Informations de l'itinéraire récupérées avec succès
+            const itineraireInfo = row;
+
+            // Récupération du token depuis les cookies
+            const token = req.cookies.token;
+            const tokenSansBearer = token.replace(/^Bearer\s/, '');
+
+            try {
+                // Envoi du token et des informations de l'itinéraire au serveur systemepdf
+                const response = await fetch('http://localhost:5000/itineraire', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        token: tokenSansBearer,
+                        itineraireInfo: itineraireInfo  // Passer les informations de l'itinéraire
+                    })
+                });
+
+                console.log("les information ",itineraireInfo );
+
+                // Envoyez la réponse au client, ou effectuez toute autre action nécessaire
+                res.status(response.status).json({ success: true, message: "Informations d'itinéraire envoyées avec succès" });
+            } catch (error) {
+                console.error("Erreur lors de la requête fetch :", error.message);
+                res.status(500).json({ success: false, message: "Erreur lors de la requête fetch" });
+            }
+        } else {
+            res.status(404).json({ error: 'Itinéraire non trouvé' });
+        }
+    });
+});
+
+app.get("/getFichierPdf/:id", (req, res) =>{
+    const itineraireId = req.params.id;
+    const currentDirectory = __dirname;
+    const pdfFilePath = path.join(currentDirectory, "itineraire.pdf");
+    fs.readFile(pdfFilePath, (err, data) => {
+        if (err) {
+            console.error('Erreur lors de la lecture du fichier PDF:', err.message);
+            res.status(500).send('Erreur lors de la lecture du fichier PDF');
+        } else {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=itineraire.pdf`);
+            res.send(data);
+        }
+    });
 }); */
 app.get("/ficheItineraire", (req, res) =>{
     return res.render("ficheIteneraire");
@@ -114,9 +177,112 @@ function generateItineraryName() {
     return itineraryName;
   }
 
-app.post("/saveItineraire", async(req, res) => {
+
+app.get("/getIteneraires", async (req, res) => {
+    try {
+        const token = req.cookies.token;
+        tokenSansBearer = token.replace(/^Bearer\s/, '');
+        const verifyResponse = await fetch('http://localhost:3000/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                token: tokenSansBearer
+            })
+        });
+
+        if (verifyResponse.ok) {
+            const verifyData = await verifyResponse.json();
+            //console.log('Token reçu côté serveur:', verifyData);
+            const db = new SQLite3.Database(dbPath);
+            const userId = verifyData.user.userId; // Assurez-vous que votre token a un champ 'sub' avec l'ID utilisateur
+            //console.log("id::",userId);
+            db.all('SELECT * FROM itineraries WHERE idUser = ?', [userId], (err, rows) => {
+                if (err) {
+                    console.error('Erreur lors de la récupération des itinéraires depuis la base de données:', err.message);
+                    res.status(500).json({ error: 'Erreur lors de la récupération des itinéraires' });
+                } else {
+                    res.json(rows);
+
+                }
+            });
+        } else {
+            console.log('Validation du token échouée');
+            res.status(401).json({ error: 'Validation du token échouée' });
+        }
+    } catch (error) {
+        console.error('Erreur générale:', error.message);
+        res.status(500).json({ error: 'Erreur générale' });
+    }
+});
+
+const geolib = require('geolib'); // Assurez-vous d'avoir installé cette bibliothèque via npm install geolib
+app.get('/station',(req,res)=>res.render('stations'));
+const distances = [];
+let stationsWithDistances = [];
+app.post('/station', (req, res) => {
+    // Supposons que les waypoints soient passés dans la requête
+    const waypoints = req.body.waypoints;
+
+    if (!waypoints || waypoints.length === 0) {
+        return res.status(400).json({ error: 'Les waypoints ne sont pas spécifiés ou mal définis.' });
+    }
+
+    fetch('https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?limit=5&timestamp=${Date.now()}')
+        .then(response => response.json())
+        .then(data => {
+            if (data && typeof data === 'object') { // Modification ici
+                const record = data; // Modification ici
+/*                 const recordJson=JSON.stringify(record, null, 2);
+    console.log(record.coordonnees_geo.object); */
+  /*   const coordinates=record.results[0].coordonnees_geo.lat;
+    console.log(coordinates); */
+    
+for (let i = 0; i < record.results.length; i++) {
+    const station = record.results[i];
+
+    if (station.coordonnees_geo && station.coordonnees_geo.lat && station.coordonnees_geo.lon) {
+        const distance = geolib.getDistance(
+            { latitude: station.coordonnees_geo.lat, longitude: station.coordonnees_geo.lon },
+            waypoints[0]
+        );
+        distances.push(distance);
+        const stationWithDistance = {
+            name: station.name,
+            isInstalled: station.is_installed,
+            bikesAvailable: station.numbikesavailable,
+            capacity: station.capacity,
+            distance: distance,
+        };
+
+        stationsWithDistances.push(stationWithDistance);
+    } else {
+        console.error('Les coordonnées géo sont absentes ou mal définies dans les données.');
+    }
+}
+/* res.render('stations', { stations:stationsWithDistances} );  
+ */          
+res.render('stations', { stations:stationsWithDistances} ); 
+
+                } 
+ 
+
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des données côté serveur :', error);
+            res.status(500).json({ error: 'Erreur lors de la récupération des données :' + error.message });
+        });
+        
+});
+
+
+
+
+app.post("/saveItineraire", (req, res) => {
     // Récupérez les données du corps de la requête
     const waypoints = req.body.waypoints;
+    console.log("body",req.body);
     const userId=req.body.userId;
     if (waypoints && waypoints.length === 2) {
         // Utilisez 'let' au lieu de 'var' pour déclarer la variable db

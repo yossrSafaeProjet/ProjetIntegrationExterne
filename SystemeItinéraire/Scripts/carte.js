@@ -1,28 +1,59 @@
 
-const map = L.map('map').setView([51.505, -0.09], 13);
+const map = L.map('map').setView([48.8566, 2.3522], 13); // Coordonnées de Paris
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
    attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-var waypoints = [];
+let waypoints = [];
+let isSelected = false;
+ function  setStart() {
+   
+      map.on('click', function (e) {
+         waypoints = [];
+         waypoints.push(e.latlng);
+         L.marker(e.latlng).addTo(map);
+         map.off('click');
+         isSelected=true;
+      });
+      return isSelected;
 
-function setStart() {
-   map.on('click', function (e) {
-      waypoints[0] = e.latlng;
-      L.marker(e.latlng).addTo(map);
-      map.off('click');
-   });
 }
 
- function setEnd() {
+async function getStationProches(){
+   if(isSelected){
+
+      try {
+         const response = await fetch('http://localhost:4000/station', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ waypoints:waypoints, nearest: true })
+        });
+        console.log(response);
+        const htmlContent = await response.text();
+        console.log(htmlContent);
+        document.getElementById('result-container').innerHTML = htmlContent;
+
+        // Vérifier si la requête a réussi (statut 200 OK)
+      } catch (error) {
+         console.error("Erreur lors de la récupération des stations côté client", error.message);
+         console.error(error.stack);      }
+   }else{
+      alert("Tu dois séléctionner un point de départ");
+   }
+}
+
+function setEnd() {
+return new Promise(resolve => {
    map.on('click', function (e) {
       waypoints[1] = e.latlng;
       L.marker(e.latlng).addTo(map);
       map.off('click');
-   
+      resolve();
    });
-} 
-
+});
+}
 function retour(){
    window.history.back();
 }
@@ -42,7 +73,13 @@ if (authToken) {
 } else {
    console.log('Aucun token trouvé dans les cookies.');
 }
+function viewStations() {
+   window.location.href = '/station';
+}
+
  async function saveRoute() {
+ /*  await setStart();
+  await setEnd(); */
    const responseVerifyToken=await fetch('http://localhost:3000/verify',{
       method:'POST',
       headers:{
@@ -65,7 +102,7 @@ if (authToken) {
            },
            body: JSON.stringify({ waypoints: waypoints,userId:userId})
        });
-       
+     
 
        const data = await response.json();
       alert('Données enregistrées avec succès');

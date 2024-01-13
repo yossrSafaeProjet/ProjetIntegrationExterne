@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/inscription.css">
 </head>
 <body>
-    <form id="myForm" >
+    <form id="myForm" action="/inscriptions" method="post">
         <label for="nom">Nom :</label>
         <input type="text" id="nom" name="nom"><br><br>
 
@@ -25,7 +25,7 @@
      ><br><br>
 
         <span id="message"></span><br>
-        <button  onclick="EnregistrerData()" id="submitButton" value="Enregistrer"> Enregistrer</button>
+        <button   id="submitButton" value="Enregistrer"> Enregistrer</button>
         <script>
             var mode = "<%= mode %>"; // Récupérez la valeur de mode depuis le serveur ici
 

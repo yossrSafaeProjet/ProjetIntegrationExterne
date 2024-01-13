@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async function () {
+/* document.addEventListener('DOMContentLoaded', async function () {
     // Fonction pour récupérer les données utilisateur
     async function getDataPerso() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -94,3 +94,4 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Appeler la fonction d'enregistrement/modification lors du clic sur le bouton
      document.getElementById('submitButton').addEventListener('click', EnregistrerData);
  });
+ */
