@@ -103,7 +103,7 @@ function viewStations() {
 }
 
  async function saveRoute() {
-if(isSelected&&isSelected){
+if(isSelected&&isSelectedEnd){
    const responseVerifyToken=await fetch('http://localhost:3000/verify',{
       method:'POST',
       headers:{
@@ -134,9 +134,12 @@ if(isSelected&&isSelected){
        console.error("Erreur lors de l'enregistrement côté client", error);
        // Gérer l'erreur côté client, par exemple, afficher un message à l'utilisateur
    }}else{
-      alert("La personne qui va ajouté un itinéraiure est n'est pas autorisé!");
+      alert("La personne qui va ajouté un itinéraiure n'est pas autorisé!");
    }
-}}
+}else{
+   alert("Tu dois séléctionner ton point de départ et ton point de destination !");
+}
+}
 L.Routing.control({
    waypoints: waypoints,
    routeWhileDragging: true
