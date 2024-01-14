@@ -19,7 +19,7 @@ let isSelected = false;
 
 }
 
-async function getStationProches(){
+async function getStationProchesDepart(){
    if(isSelected){
 
       try {
@@ -44,15 +44,40 @@ async function getStationProches(){
    }
 }
 
+async function getStationProchesDestination(){
+   if(isSelectedEnd){
+
+      try {
+         const response = await fetch('http://localhost:4000/station', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ waypoints:waypoints, nearest: true })
+        });
+        console.log(response);
+        const htmlContent = await response.text();
+        console.log(htmlContent);
+        document.getElementById('results-container').innerHTML = htmlContent;
+
+        // Vérifier si la requête a réussi (statut 200 OK)
+      } catch (error) {
+         console.error("Erreur lors de la récupération des stations côté client", error.message);
+         console.error(error.stack);      }
+   }else{
+      alert("Tu dois séléctionner un point de destination");
+   }
+}
+let isSelectedEnd=false;
 function setEnd() {
-return new Promise(resolve => {
+
    map.on('click', function (e) {
       waypoints[1] = e.latlng;
       L.marker(e.latlng).addTo(map);
       map.off('click');
-      resolve();
+      isSelectedEnd=true;
    });
-});
+return isSelected;
 }
 function retour(){
    window.history.back();
@@ -78,8 +103,7 @@ function viewStations() {
 }
 
  async function saveRoute() {
- /*  await setStart();
-  await setEnd(); */
+if(isSelected&&isSelectedEnd){
    const responseVerifyToken=await fetch('http://localhost:3000/verify',{
       method:'POST',
       headers:{
@@ -110,8 +134,11 @@ function viewStations() {
        console.error("Erreur lors de l'enregistrement côté client", error);
        // Gérer l'erreur côté client, par exemple, afficher un message à l'utilisateur
    }}else{
-      alert("La personne qui va ajouté un itinéraiure est n'est pas autorisé!");
+      alert("La personne qui va ajouté un itinéraiure n'est pas autorisé!");
    }
+}else{
+   alert("Tu dois séléctionner ton point de départ et ton point de destination !");
+}
 }
 L.Routing.control({
    waypoints: waypoints,

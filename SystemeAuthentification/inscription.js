@@ -68,18 +68,48 @@ router.get('/informationPersonnelles/:id', async (req, res) => {
 router.patch('/:id', (req, res) => {
   const utilisateurId = req.params.id;
   const utilisateurModifie = req.body;
-      // Si le mot de passe n'est pas modifié, mettez à jour l'utilisateur sans changer le mot de passe
+console.log('password',utilisateurModifie.password );
+console.log('password',utilisateurModifie.confirmationMotDePasse );
+  // Vérifiez si les mots de passe correspondent
+  if (utilisateurModifie.password && utilisateurModifie.password !== utilisateurModifie.confirmationMotDePasse) {
+    res.status(400).send('Les mots de passe ne correspondent pas. Veuillez réessayer.');
+    return;
+  }
+
+  // Hasher le nouveau mot de passe si fourni
+  if (utilisateurModifie.password) {
+    bcrypt.hash(utilisateurModifie.password, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send('Erreur lors du hashage du mot de passe.');
+        return;
+      }
+
+      // Mettez à jour l'utilisateur avec le mot de passe hashé
       db.run(`
-          UPDATE utilisateurs SET nom = ?, prenom = ?, email = ? WHERE id = ?
-      `, [utilisateurModifie.nom, utilisateurModifie.prenom, utilisateurModifie.email, utilisateurId], (err) => {
-          if (err) {
-              console.error(err.message);
-              res.status(500).send('Erreur lors de la mise à jour de l\'utilisateur.');
-          } else {
-            console.log("modifié",utilisateurModifie)
-              res.send('Utilisateur mis à jour avec succès.');
-          }
+        UPDATE utilisateurs SET nom = ?, prenom = ?, email = ?, password = ? WHERE id = ?
+      `, [utilisateurModifie.nom, utilisateurModifie.prenom, utilisateurModifie.email, hashedPassword, utilisateurId], (err) => {
+        if (err) {
+          console.error(err.message);
+          res.status(500).send('Erreur lors de la mise à jour de l\'utilisateur.');
+        } else {
+          res.send('Utilisateur mis à jour avec succès.');
+        }
       });
+    });
+  } else {
+    // Si le mot de passe n'est pas modifié, mettez à jour l'utilisateur sans changer le mot de passe
+    db.run(`
+      UPDATE utilisateurs SET nom = ?, prenom = ?, email = ? WHERE id = ?
+    `, [utilisateurModifie.nom, utilisateurModifie.prenom, utilisateurModifie.email, utilisateurId], (err) => {
+      if (err) {
+        console.error(err.message);
+        res.status(500).send('Erreur lors de la mise à jour de l\'utilisateur.');
+      } else {
+        res.send('Utilisateur mis à jour avec succès.');
+      }
+    });
+  }
 });
 
 module.exports = router;

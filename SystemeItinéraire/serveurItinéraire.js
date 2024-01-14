@@ -19,49 +19,42 @@ app.get('/',(req,res)=>res.redirect('/connexion'));
 app.get('/connexion',(req,res)=> res.render('conexion'));
 app.use(express.static('css'));
 let userIdSaved=0;
+
 app.post('/fetchData', async (req, res) => {
     let authToken = req.cookies.token;
-    authToken = authToken.replace(/^Bearer\s/, '');
-    
+
     try {
-
-      const response = await fetch('http://localhost:3000/auth/login',{
-        method:'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            email: req.body.email,
-            password: req.body.password,
-    })
-});    
-const responseVerifyToken=await fetch('http://localhost:3000/verify',{
-    method:'POST',
-    headers:{
-
-       'Content-Type': 'application/json'
-         },
-         body: JSON.stringify({token:authToken})
-         
-     });
-     const userData=await responseVerifyToken.json();
-    
-    const user=userData.user; 
-    userIdSaved=user;
+        const response = await fetch('http://localhost:3000/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: req.body.email,
+                password: req.body.password,
+            }),
+        });
 
         if (response.status === 401) {
-            // Renvoyer une réponse JSON avec le statut 400 et le message d'erreur
-             res.redirect('/connexion');
-        } else if(response.status=== 200) {
-        authToken = response.headers.get('Authorization');
-        //console.log('Token récupéré côté client :', authToken);
-        res.appendHeader('Set-Cookie', 'token=' + authToken);
-        return res.render('espace');
+            const data = await response.json();  // Ceci renvoie une nouvelle promesse
+            errorMessage=data.message;
+            res.render('conexion');
+        } else if (response.status === 200) {
+            authToken = response.headers.get('Authorization');
+            res.cookie('token', authToken);  // Utilisez res.cookie pour définir les cookies
+            return res.render('espace');
+        } else {
+            const data = await response.json();  // Dans le cas d'un autre statut, vous pouvez également extraire les données JSON
+            // Traiter les données normales ici
         }
     } catch (error) {
-        console.error('pas', error);
- }
+        console.error('Erreur lors de la requête :', error);
+        // Gérer l'erreur ici
+    }
 });
+
+
+    
 
 
 
@@ -73,7 +66,7 @@ app.get('/modification',(req,res)=>res.render('inscription',{ mode: 'modificatio
 
 
 app.get('/espace',(req,res)=>res.render('espace'));
-app.post('/inscriptions', async (req, res) => {
+/* app.post('/inscriptions', async (req, res) => {
     try {
         // Effectuer la requête vers le serveur pour enregistrer l'utilisateur
         const response = await fetch('http://localhost:3000/enregistrerUtilisateur/enregistrer', {
@@ -100,8 +93,8 @@ app.post('/inscriptions', async (req, res) => {
         // Gérer l'erreur, par exemple, renvoyer un message d'erreur au client
         res.status(400).json({ error: error.message });
     }
-});
-/*app.post('/ficheItineraire/:id', async (req, res) => {
+}); */
+app.post('/ficheItineraire/:id', async (req, res) => {
     console.log("id");
     const itineraireId = parseInt(req.params.id, 10);
     const db = new SQLite3.Database(dbPath);
@@ -162,7 +155,7 @@ app.get("/getFichierPdf/:id", (req, res) =>{
             res.send(data);
         }
     });
-}); */
+}); 
 app.get("/ficheItineraire", (req, res) =>{
     return res.render("ficheIteneraire");
 });
@@ -219,8 +212,7 @@ app.get("/getIteneraires", async (req, res) => {
 
 const geolib = require('geolib'); // Assurez-vous d'avoir installé cette bibliothèque via npm install geolib
 app.get('/station',(req,res)=>res.render('stations'));
-const distances = [];
-let stationsWithDistances = [];
+
 app.post('/station', (req, res) => {
     // Supposons que les waypoints soient passés dans la requête
     const waypoints = req.body.waypoints;
@@ -234,11 +226,9 @@ app.post('/station', (req, res) => {
         .then(data => {
             if (data && typeof data === 'object') { // Modification ici
                 const record = data; // Modification ici
-/*                 const recordJson=JSON.stringify(record, null, 2);
-    console.log(record.coordonnees_geo.object); */
-  /*   const coordinates=record.results[0].coordonnees_geo.lat;
-    console.log(coordinates); */
-    
+
+                const distances = [];
+                let stationsWithDistances = [];
 for (let i = 0; i < record.results.length; i++) {
     const station = record.results[i];
 
@@ -247,6 +237,12 @@ for (let i = 0; i < record.results.length; i++) {
             { latitude: station.coordonnees_geo.lat, longitude: station.coordonnees_geo.lon },
             waypoints[0]
         );
+        const bikeSpeed = 3; // Estimation de la vitesse en mètres par seconde pour le vélo (ajustez selon vos besoins)
+        const durationInSeconds = distance / bikeSpeed; // Durée en secondes (distance / vitesse)
+        const durationInMinutes = durationInSeconds / 60; // Durée en minutes
+
+        const hours = Math.floor(durationInMinutes / 60);
+        const minutes = Math.round(durationInMinutes % 60);// Durée en heures
         distances.push(distance);
         const stationWithDistance = {
             name: station.name,
@@ -254,6 +250,7 @@ for (let i = 0; i < record.results.length; i++) {
             bikesAvailable: station.numbikesavailable,
             capacity: station.capacity,
             distance: distance,
+            duration:`${hours}h:${minutes}min`
         };
 
         stationsWithDistances.push(stationWithDistance);
@@ -262,8 +259,12 @@ for (let i = 0; i < record.results.length; i++) {
     }
 }
 /* res.render('stations', { stations:stationsWithDistances} );  
- */          
-res.render('stations', { stations:stationsWithDistances} ); 
+ */        
+stationsWithDistances.sort((a, b) => a.distance - b.distance);
+
+// Sélection des 3 stations avec la distance la plus basse
+const nearestStations = stationsWithDistances.slice(0, 3);  
+res.render('stations', { stations:nearestStations} ); 
 
                 } 
  
@@ -303,6 +304,7 @@ app.post("/saveItineraire", (req, res) => {
     }
 });
 app.get('/carte',(req,res)=>res.render('carte'));
+
 app.get('/logout', async (req, res) => {
     
     try {

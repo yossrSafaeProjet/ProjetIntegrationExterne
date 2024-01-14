@@ -25,23 +25,23 @@
         </tbody>
     </table>
 
-    <form id="itineraryForm" action="/carte" method="get">
-        <button type="submit">Nouvel Itinéraire</button>
+    <form id="itineraryForm" >
+        <button onclick="nouvelleItineraire()">Nouvel Itinéraire</button>
     </form>
     
 
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log("ccc");
+            
             try {
                 const response = await fetch('http://localhost:4000/getIteneraires');
                 console.log(response);
                 if (!response.ok) {
                     throw new Error(`Erreur lors de la récupération des itinéraires. Statut : ${response.status}`);
                 }
-                console.log("ccc");
+                
                 const itineraires = await response.json();
-                console.log("ccc",itineraires);
+                
                 displayItineraires(itineraires);
             } catch (error) {
                 console.error('Erreur lors de la récupération des itinéraires:', error.message);
@@ -110,5 +110,6 @@ $(document).ready(function () {
         });
     });
     </script>
+    <script src="espace.js"></script>
 </body>
 </html>

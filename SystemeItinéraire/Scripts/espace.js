@@ -1,8 +1,8 @@
-document.getElementById("itineraryForm").addEventListener("DOMContentLoaded", function(event) {
+/* document.getElementById("itineraryForm").addEventListener("DOMContentLoaded", function(event) {
     event.preventDefault(); // Empêche le comportement par défaut du formulaire
 
     window.location.href = "/carte"; 
-});
+}); */
 
 async function logout() {
 try {
@@ -64,6 +64,27 @@ async function getData() {
 
     } }catch (error) {
       console.error('Erreur lors de la récupération des données', error);
+    }
+  }
+
+  async function nouvelleItineraire(){
+    try {
+     
+      const responseVerifyToken = await fetch('http://localhost:3000/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token:tokenSansBearer })
+      });
+  
+      const userData = await responseVerifyToken.json();
+  
+      if (responseVerifyToken.ok) {
+        fetch('http://localhost:4000/carte');
+      }
+    }catch(error){
+      console.log("parsonne unthorized");
     }
   }
   
