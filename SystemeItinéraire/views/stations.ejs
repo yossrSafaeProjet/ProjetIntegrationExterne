@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stations Velib</title>
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body >
+    <h1>Stations Velib</h1>
+    
+    <ul >
+        <% stations.forEach(station => { %>
+            <li>
+               
+                <label for="<%= station.name %>">
+                    <p>Name: <%= station.name %></p>
+                    <p>Installed: <%= station.isInstalled %></p>
+                    <p>Bikes Available: <%= station.bikesAvailable %></p>
+                    <p>Capacity: <%= station.capacity %></p>
+                    <p class="hidden" data-type="latitude">Latitude: <%= station.latitude %></p>
+                    <p class="hidden" data-type="longitude">Longitude: <%= station.longitude %></p>
+
+                </label>
+                <input type="checkbox" id="station_<%= station.name %>" name="station-checkbox" class="station-checkbox" onclick="getInfoStation(this)">
+            </li>
+        <% }); %>
+    </ul>
+    <script src="carte.js"></script>
+</body>
+</html>

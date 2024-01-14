@@ -21,9 +21,9 @@ app.get('/connexion',(req,res)=> res.render('conexion'));
 app.use(express.static('css'));
 let userIdSaved=0;
 app.post('/fetchData', async (req, res) => {
-    let authToken = req.cookies.token;
+    let authToken = req.cookies && req.cookies.token;
     authToken = authToken.replace(/^Bearer\s/, '');
-    
+  
     try {
 
       const response = await fetch('http://localhost:3000/auth/login',{
@@ -67,7 +67,13 @@ const responseVerifyToken=await fetch('http://localhost:3000/verify',{
 
 
 // Récupérer le token depuis le cookie
-app.get('/inscription',(req,res)=>res.render('inscription'));
+app.get('/inscription',(req,res)=>res.render('inscription',{ mode: 'inscription' }));
+app.get('/modification',(req,res)=>res.render('inscription',{ mode: 'modification' }));
+
+
+
+
+app.get('/espace',(req,res)=>res.render('espace'));
 app.post('/inscriptions', async (req, res) => {
     try {
         // Effectuer la requête vers le serveur pour enregistrer l'utilisateur
@@ -170,6 +176,9 @@ app.post("/getFichierPdf/:id", (req, res) => {
         res.status(500).send('Erreur lors de la récupération du fichier PDF');
     }
 });
+app.get("/ficheItineraire", (req, res) =>{
+    return res.render("ficheIteneraire");
+});
 let compteur=0;
 function generateItineraryName() {
     // Convertir l'ID de l'utilisateur en une lettre, par exemple, 'A' pour 1, 'B' pour 2, etc.
@@ -221,50 +230,95 @@ app.get("/getIteneraires", async (req, res) => {
     }
 });
 
-/* async function fetchData() {
-    try {
-        const response = await fetch(`${serveurAuthentification}/connexion`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+const geolib = require('geolib');
+app.get('/station', (req, res) => res.render('stations'));
+
+app.post('/station', (req, res) => {
+    // Supposons que les waypoints soient passés dans la requête
+    const waypoints = req.body.waypoints;
+
+    if (!waypoints || waypoints.length === 0) {
+        return res.status(400).json({ error: 'Les waypoints ne sont pas spécifiés ou mal définis.' });
+    }
+
+    fetch('https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records?limit=5&timestamp=${Date.now()}')
+        .then(response => response.json())
+        .then(data => {
+            if (data && typeof data === 'object') {
+                const recordData = data;
+
+                const distances = [];
+                const stationsWithDistances = [];
+
+                for (let i = 0; i < recordData.results.length; i++) {
+                    const station = recordData.results[i];
+
+                    if (station.coordonnees_geo && station.coordonnees_geo.lat && station.coordonnees_geo.lon) {
+                        
+                
+                        const distance = geolib.getDistance(
+                            { latitude: station.coordonnees_geo.lat, longitude: station.coordonnees_geo.lon },
+                            waypoints[0]
+                        );
+                
+                
+
+                        distances.push(distance);
+
+                        const stationWithDistance = {
+                            name: station.name,
+                            isInstalled: station.is_installed,
+                            bikesAvailable: station.numbikesavailable,
+                            capacity: station.capacity,
+                            distance: distance,
+                            latitude:station.coordonnees_geo.lat,
+                            longitude: station.coordonnees_geo.lon,
+                        };
+
+                        stationsWithDistances.push(stationWithDistance);
+                    } else {
+                        console.error('Les coordonnées géo sont absentes ou mal définies dans les données.');
+                    }
+                }
+
+                res.render('stations', { stations: stationsWithDistances });
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors de la récupération des données côté serveur :', error);
+            res.status(500).json({ error: 'Erreur lors de la récupération des données :' + error.message });
         });
-
-        if (!response.ok) {
-            console.error(`Error: ${response.status} - ${response.statusText}`);
-            // Handle error response here
-        } else {
-            const html = await response.text(); 
-            console.log(html);
-            // Récupérer le texte HTML de la réponse
-           return html;
-        }
-    } catch (error) {
-        console.error('Error during fetch:', error);
-    }
-}
-
-app.get('/fetchPage', async (req, res) => {
-    const html = await fetchData();
-
-    if (html !== null) {
-
-        res.send(html);
-        console.log(html);
-    } else {
-        res.status(500).send('Internal Server Error');
-    }
 });
- */
+
+app.post('/infoStation', (req, res) => {
+    const Stationname = req.body.stationName;
+    const StationLat= req.body.latitude;
+    const stationLot=req.body.longitude;
+    //console.log("les informations",Stationname,StationLat,stationLot);
+
+    const stationData = {
+        name: Stationname,
+        latitude: StationLat,  
+        longitude: stationLot,
+    };
+    //console.log("les info ",stationData);
+    return res.status(200).json({ valid: true, message: '' ,stationData:stationData });
+});
+
+
+
 app.post("/saveItineraire", (req, res) => {
     // Récupérez les données du corps de la requête
     const waypoints = req.body.waypoints;
+    console.log("body",req.body);
     const userId=req.body.userId;
+    const infoStation=req.body.infoStation;
+    console.log("",infoStation);
     if (waypoints && waypoints.length === 2) {
         // Utilisez 'let' au lieu de 'var' pour déclarer la variable db
         var routeJSON = JSON.stringify(waypoints);
-
-        db.run("INSERT INTO itineraries (route,idUser,name) VALUES (?,?,?)",  [routeJSON, userId, generateItineraryName()]);
+        var StationDepart=JSON.stringify(infoStation);
+        db.run("INSERT INTO itineraries (route,idUser,name,StationDepart) VALUES (?,?,?,?)",  [routeJSON, userId, generateItineraryName(),StationDepart]);
         db.all("SELECT * FROM itineraries", [], (err, rows) => {
             if (err) {
               console.error("Erreur lors de la récupération des données :", err.message);
@@ -301,6 +355,9 @@ app.get('/logout', async (req, res) => {
     } 
  
 });
+app.get('/fetchInformations',(req,res)=>{
+
+})
 const port=process.env.PORT || 4000;
 app.listen(port,()=>{
     console.log("Systéme itinéraire sur le port 4000");
